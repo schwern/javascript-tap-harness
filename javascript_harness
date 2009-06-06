@@ -1,0 +1,67 @@
+#!/usr/bin/perl -w
+
+use autodie;
+use TAP::Harness;
+
+my $harness = TAP::Harness->new({
+    exec => sub {
+        my( $harness, $file ) = @_;
+
+        my($type) = $file =~ m{\.(js|html)$};
+        return unless $type;  # run Perl normally
+
+        require File::Spec;
+        require WWW::Selenium;
+        my $sel = WWW::Selenium->new(
+            host => "localhost",
+            post => 4444,
+            browser => "*firefox",
+            browser_url => "file://nothing"
+        );
+
+        my $url = $type eq 'js'   ? _testify_javascript($file) :
+                  $type eq 'html' ? File::Spec->rel2abs($file) :
+                                    die "Unknown type $type";
+
+        $sel->start;
+        $sel->open($url);
+        return $sel->get_text(q{//pre[@id="TAP"]});
+    },
+});
+
+$harness->runtests(@ARGV || glob("t/*.{t,js,html}"));
+
+
+sub _testify_javascript {
+    my $file = shift;
+
+    open my $fh, "<", $file;
+    my $javascript = join "", <$fh>;
+
+    use Cwd;
+    use File::Temp 'tempfile';
+
+    my $cwd = cwd;
+
+    my($tmpfh, $tmpfile) = tempfile( CLEANUP => 1 );
+    print $tmpfh <<"END_OF_HTML";
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<html>
+  <head>
+    <script type="text/javascript" src="$cwd/t/lib/Test/Builder.js"></script>
+    <script type="text/javascript" src="$cwd/t/lib/Test/Simple.js"></script>
+    <title>TAP test</title>
+</head>
+
+<body>
+<pre id="TAP">
+<script type="text/javascript">
+$javascript
+</script>
+</pre>
+</body>
+</html>
+END_OF_HTML
+
+    return "file://$tmpfile";
+}
