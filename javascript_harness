@@ -29,7 +29,8 @@ my $harness = TAP::Harness->new({
     },
 });
 
-$harness->runtests(@ARGV || glob("t/*.{t,js,html}"));
+my @files = @ARGV ? @ARGV : glob("t/*.{t,js,html}");
+$harness->runtests(@files);
 
 
 sub _testify_javascript {
