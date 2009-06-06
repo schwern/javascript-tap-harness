@@ -1,0 +1,15 @@
+Requires:
+
+* Selenium Remote Control Server running on localhost port 4444
+* Perl > 5.8.8
+* Perl modules...
+  * autodie
+  * TAP::Harness 3.17 or newer
+  * WWW::Selenium
+
+
+To run:
+
+* Start your Selenium RC server.
+* Run javascript_harness
+
