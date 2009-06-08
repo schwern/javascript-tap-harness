@@ -1,36 +1,26 @@
 #!/usr/bin/perl -w
 
+use strict;
 use autodie;
 use TAP::Harness;
 
-my $harness = TAP::Harness->new({
-    exec => sub {
-        my( $harness, $file ) = @_;
+# Cache the started selenium object so multiple tests
+# don't have to restart saving lots of time.
+our $Selenium;
+sub get_selenium {
+    require WWW::Selenium;
+    return $Selenium if $Selenium;
 
-        my($type) = $file =~ m{\.(js|html)$};
-        return unless $type;  # run Perl normally
+    $Selenium = WWW::Selenium->new(
+        host => "localhost",
+        post => 4444,
+        browser => "*firefox",
+        browser_url => "file://nothing"
+    );
+    $Selenium->start;
 
-        require File::Spec;
-        require WWW::Selenium;
-        my $sel = WWW::Selenium->new(
-            host => "localhost",
-            post => 4444,
-            browser => "*firefox",
-            browser_url => "file://nothing"
-        );
-
-        my $url = $type eq 'js'   ? _testify_javascript($file) :
-                  $type eq 'html' ? File::Spec->rel2abs($file) :
-                                    die "Unknown type $type";
-
-        $sel->start;
-        $sel->open($url);
-        return $sel->get_text(q{//pre[@id="TAP"]});
-    },
-});
-
-my @files = @ARGV ? @ARGV : glob("t/*.{t,js,html}");
-$harness->runtests(@files);
+    return $Selenium;
+}
 
 
 sub _testify_javascript {
@@ -66,3 +56,30 @@ END_OF_HTML
 
     return "file://$tmpfile";
 }
+
+
+my $harness = TAP::Harness->new({
+    exec => sub {
+        my( $harness, $file ) = @_;
+
+        my($type) = $file =~ m{\.(js|html)$};
+        return unless $type;  # run Perl normally
+
+        require File::Spec;
+        my $sel = get_selenium();
+
+        my $url = $type eq 'js'   ? _testify_javascript($file) :
+                  $type eq 'html' ? File::Spec->rel2abs($file) :
+                                    die "Unknown type $type";
+
+        $sel->open($url);
+        return $sel->get_text(q{//pre[@id="TAP"]});
+    },
+});
+
+my @files = @ARGV ? @ARGV : glob("t/*.{t,js,html}");
+$harness->runtests(@files);
+
+# Have to do this else the Firefox instance will not be stopped
+# and we will dump core.
+$Selenium->stop if $Selenium;
