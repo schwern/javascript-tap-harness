@@ -1,15 +1,56 @@
+This is a prototype demonstrator of using Selenium + Test.Simple + 
+TAP::Harness to automate Javascript unit tests.
+
+
 Requires:
 
 * Selenium Remote Control Server running on localhost port 4444
-* Perl > 5.8.8
+  http://seleniumhq.org/projects/remote-control/
+* Perl >= 5.8.8
 * Perl modules...
   * autodie
-  * TAP::Harness 3.17 or newer
-  * WWW::Selenium
+    http://search.cpan.org/dist/autodie
+  * TAP::Harness 3.17 or newer (part of Test-Harness)
+    http://search.cpan.org/dist/Test-Harness
+  * WWW::Selenium (part of Test-WWW-Selenium)
+    http://search.cpan.org/dist/Test-WWW-Selenium 
+* A web browser Selenium can talk to.
+  Currently hard coded to Firefox.
 
 
 To run:
 
 * Start your Selenium RC server.
+
+  The docs on that.
+  http://seleniumhq.org/docs/05_selenium_rc.html
+
 * Run javascript_harness
 
+* It will run the demonstration tests in t/.  One is a
+  Perl test to demonstrate it still runs Perl tests.  One is
+  Javascript inside HTML.  The rest are pure Javascript.
+
+* If all goes well you'll see....
+
+$ perl javascript_harness 
+t/perl.t .... ok   
+t/tap.js .... ok   
+t/tap1.js ... ok   
+t/tap2.js ... ok   
+t/tap3.js ... ok   
+t/tap4.js ... ok   
+t/tap5.js ... ok   
+t/tap.html .. ok   
+All tests successful.
+Files=8, Tests=8,  9 wallclock secs ( 0.24 usr  0.07 sys +  0.03 cusr  0.02 csys =  0.36 CPU)
+Result: PASS
+
+
+Notes:
+
+* The Javascript tests are written using Test.Simple, a Javascript testing
+  library which outputs TAP.  They are bundled in t/lib.  You can get
+  your own copy here.
+  http://openjsan.org/doc/t/th/theory/Test/Simple/
+ 
