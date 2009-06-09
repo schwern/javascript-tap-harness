@@ -78,8 +78,10 @@ my $harness = TAP::Harness->new({
 });
 
 my @files = @ARGV ? @ARGV : glob("t/*.{t,js,html}");
-$harness->runtests(@files);
+my $result = $harness->runtests(@files);
 
 # Have to do this else the Firefox instance will not be stopped
 # and we will dump core.
 $Selenium->stop if $Selenium;
+
+exit($result->all_passed ? 0 : 1);
